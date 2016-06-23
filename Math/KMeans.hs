@@ -175,6 +175,6 @@ kmeansWith initF extract dist k points = go `liftM` initF k points
       where !minDistIndex = G.minIndexBy (compare `on` dist (extract a)) cs
 
     -- pgroupsEqualUnder :: Clusters a -> Clusters a -> Bool
-    pgroupsEqualUnder g1 g2 = 
-      G.map (map extract . elements) g1 == G.map (map extract . elements) g2
+    pgroupsEqualUnder g1 g2 = elementsOf g1 == elementsOf g2
+      where elementsOf = G.map (map extract . elements)
 {-# INLINE kmeansWith #-}
