@@ -19,6 +19,7 @@ library
   Build-depends:     base >= 4 && < 5, vector >= 0.7, mtl >= 2.1
   ghc-prof-options:  -prof -auto-all
   ghc-options: 	     -O2 -funbox-strict-fields -Wall
+  Extensions:        ScopedTypeVariables
 
 executable kmeans-example
   main-is:           example.hs

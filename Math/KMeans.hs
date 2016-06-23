@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -144,7 +145,7 @@ kmeansWith :: Monad m
 kmeansWith initF extract dist k points = go `liftM` initF k points
   
   where 
-    -- go :: Clusters a -> Clusters a
+    go :: Clusters a -> Clusters a
     go pgroups =
       case kmeansStep pgroups of
         pgroups' | pgroupsEqualUnder pgroups pgroups'  -> pgroups
@@ -177,4 +178,6 @@ kmeansWith initF extract dist k points = go `liftM` initF k points
     -- pgroupsEqualUnder :: Clusters a -> Clusters a -> Bool
     pgroupsEqualUnder g1 g2 = elementsOf g1 == elementsOf g2
       where elementsOf = G.map (map extract . elements)
+
+
 {-# INLINE kmeansWith #-}
