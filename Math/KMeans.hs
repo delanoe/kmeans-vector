@@ -135,7 +135,7 @@ kmeans extract dist k points =
 --     probably be 'IO' or 'ST' (e.g using my <http://hackage.haskell.org/package/probable probable> package)
 --     and you could fine-tune the way the initial clusters are picked so that the algorithm
 --     may give better results. Of course, if your initialization is monadic, so is the result. 
-kmeansWith :: Monad m
+kmeansWith :: forall m a. Monad m
            => (Int -> [a] -> m (Clusters a)) -- ^ how should we partition the points?
            -> (a -> V.Vector Double)         -- ^ get the coordinates of a "point"
            -> Distance                       -- ^ what distance do we use
@@ -151,7 +151,7 @@ kmeansWith initF extract dist k points = go `liftM` initF k points
         pgroups' | pgroupsEqualUnder pgroups pgroups'  -> pgroups
                  | otherwise -> go pgroups' 
 
-    -- kmeansStep :: Clusters a -> Clusters a
+    kmeansStep :: Clusters a -> Clusters a
     kmeansStep clusters = 
       case centroidsOf clusters of
         centroids -> 
@@ -160,7 +160,7 @@ kmeansWith initF extract dist k points = go `liftM` initF k points
           . map (pairToClosestCentroid centroids)
           $ points
 
-    -- centroidsOf :: Clusters a -> Centroids
+    centroidsOf :: Clusters a -> Centroids
     centroidsOf cs = G.map centroidOf cs
       where
 
@@ -171,13 +171,14 @@ kmeansWith initF extract dist k points = go `liftM` initF k points
 
           where n = fromIntegral (length elts)
 
-    -- pairToClosestCentroid :: Centroids -> a -> (Int, a)
+    pairToClosestCentroid :: Centroids -> a -> (Int, a)
     pairToClosestCentroid cs a = (minDistIndex, a)
       where !minDistIndex = G.minIndexBy (compare `on` dist (extract a)) cs
 
-    -- pgroupsEqualUnder :: Clusters a -> Clusters a -> Bool
+    pgroupsEqualUnder :: Clusters a -> Clusters a -> Bool
     pgroupsEqualUnder g1 g2 = elementsOf g1 == elementsOf g2
       where elementsOf = G.map (map extract . elements)
+
 
 
 {-# INLINE kmeansWith #-}
