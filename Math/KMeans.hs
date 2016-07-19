@@ -204,8 +204,8 @@ kmeansWith' initF extract dist k points = go `liftM` initF k points
     go :: Clusters a -> (Centroids, Clusters a)
     go pgroups =
       case kmeansStep pgroups of
-        (c, pgroups') | pgroupsEqualUnder pgroups pgroups'  -> (c, pgroups)
-                      | otherwise -> go pgroups'
+        (centroids, pgroups') | pgroupsEqualUnder pgroups pgroups'  -> (centroids, pgroups)
+                              | otherwise -> go pgroups'
 
     kmeansStep :: Clusters a -> (Centroids, Clusters a)
     kmeansStep clusters =
