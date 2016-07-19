@@ -20,7 +20,9 @@ on <http://github.com/alpmestan/kmeans-vector github>.
 module Math.KMeans
   ( -- * The meat of this package: 'kmeans' 
     kmeans
+  , kmeans'
   , kmeansWith
+  , kmeansWith'
 
   , -- * Types
     Distance
@@ -118,7 +120,17 @@ kmeans :: (a -> U.Vector Double) -- ^ feature extraction
        -> [a]                    -- ^ input list of 'points'
        -> Clusters a             -- ^ result, hopefully 'k' clusters of points
 kmeans extract dist k points = 
-  runIdentity $ kmeansWith (\n ps -> return $ partition n ps) extract dist k points
+  runIdentity $ kmeansWith (\n ps -> pure $ partition n ps) extract dist k points
+
+
+kmeans' :: (a -> U.Vector Double) -- ^ feature extraction
+       -> Distance               -- ^ distance function
+       -> Int                    -- ^ the 'k' to run 'k'-means with (i.e number of desired clusters)
+       -> [a]                    -- ^ input list of 'points'
+       -> (Centroids, Clusters a)             -- ^ result, hopefully 'k' clusters of points
+kmeans' extract dist k points = 
+  runIdentity $ kmeansWith' (\n ps -> pure $ partition n ps) extract dist k points
+
 
 -- | Same as 'kmeans', except that instead of using 'partition', you supply your own
 --   function for choosing the initial clusterinV. Two important things to note:
@@ -185,24 +197,24 @@ kmeansWith' :: forall m a. Monad m
            -> Distance                       -- ^ what distance do we use
            -> Int                            -- ^ number of desired clusters
            -> [a]                            -- ^ list of points
-           -> m (Clusters a)                 -- ^ resulting clustering
+           -> m (Centroids, Clusters a)      -- ^ resulting clustering
 kmeansWith' initF extract dist k points = go `liftM` initF k points
 
   where 
-    go :: Clusters a -> Clusters a
+    go :: Clusters a -> (Centroids, Clusters a)
     go pgroups =
       case kmeansStep pgroups of
-        pgroups' | pgroupsEqualUnder pgroups pgroups'  -> pgroups
-                 | otherwise -> go pgroups' 
+        (c, pgroups') | pgroupsEqualUnder pgroups pgroups'  -> (c, pgroups)
+                      | otherwise -> go pgroups'
 
-    kmeansStep :: Clusters a -> Clusters a
+    kmeansStep :: Clusters a -> (Centroids, Clusters a)
     kmeansStep clusters =
       case centroidsOf clusters of
-        centroids ->
-            V.filter (not . null . elements)
-          . V.unsafeAccum clusterAdd (V.replicate k emptyCluster)
-          . map (pairToClosestCentroid centroids)
-          $ points
+        centroids -> (centroids, clusters) where
+            clusters = V.filter (not . null . elements)
+                       . V.unsafeAccum clusterAdd (V.replicate k emptyCluster)
+                       . map (pairToClosestCentroid centroids)
+                       $ points
 
     centroidsOf :: Clusters a -> Centroids
     centroidsOf cs = V.map centroidOf cs
